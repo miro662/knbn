@@ -4,6 +4,19 @@ from django.utils.text import slugify
 from users.models import User
 
 
+class BoardQuerySet(models.QuerySet):
+    def available_to(self, user):
+        return self.filter(members=user)
+
+
+class BoardManager(models.Manager):
+    def get_queryset(self):
+        return BoardQuerySet(self.model, using=self._db).filter(archived=False)
+
+    def available_to(self, user):
+        return self.get_queryset().available_to(user)
+
+
 class Board(models.Model):
     name = models.CharField(max_length=128)
     slug = models.SlugField(unique=True)
@@ -16,6 +29,10 @@ class Board(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    archived = models.BooleanField(default=False)
+
+    objects = BoardManager()
+    all_objects = BoardQuerySet.as_manager()
 
     def __str__(self):
         return f"{self.owner.get_full_name()}'s {self.name}"
