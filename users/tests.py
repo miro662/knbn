@@ -1,3 +1,5 @@
-from django.test import TestCase
+from users.models import User
 
-# Create your tests here.
+
+def test_no_users(db):
+    assert User.objects.count() == 0

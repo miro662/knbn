@@ -14,7 +14,13 @@ psycopg2 = "^2.9.6"
 [tool.poetry.group.dev.dependencies]
 bpython = "^0.24"
 black = {extras = ["d"], version = "^23.3.0"}
+pytest = "^7.3.1"
+pytest-django = "^4.5.2"
 
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "knbn.settings"
+python_files = "tests.py"
