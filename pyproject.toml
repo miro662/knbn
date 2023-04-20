@@ -12,6 +12,7 @@ psycopg2 = "^2.9.6"
 djangorestframework = "^3.14.0"
 markdown = "^3.4.3"
 django-filter = "^23.1"
+drf-spectacular = "^0.26.2"
 
 
 [tool.poetry.group.dev.dependencies]
