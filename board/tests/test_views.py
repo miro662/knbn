@@ -2,6 +2,7 @@ import pytest
 from rest_framework.reverse import reverse
 
 from board.models import Board, BoardMembership
+from users.models import User
 
 
 @pytest.fixture
@@ -11,7 +12,6 @@ def board_creation_payload(board_name):
 
 def test_cannot_create_board_as_unauthorized_user(api_client, board_creation_payload):
     url = reverse("board:board-list")
-
     response = api_client.post(url, board_creation_payload)
 
     assert response.status_code == 403
@@ -19,7 +19,6 @@ def test_cannot_create_board_as_unauthorized_user(api_client, board_creation_pay
 
 def test_creates_board(authenticated_client, board_name, board_creation_payload, user):
     url = reverse("board:board-list")
-
     response = authenticated_client.post(url, board_creation_payload)
 
     assert response.status_code == 201
@@ -30,9 +29,27 @@ def test_creates_board_membership(
     authenticated_client, board_name, board_creation_payload, user
 ):
     url = reverse("board:board-list")
-
     response = authenticated_client.post(url, board_creation_payload)
 
     assert BoardMembership.objects.filter(
         board__slug=response.data["slug"], user=user, role=BoardMembership.Role.ADMIN
     ).exists()
+
+
+def test_lists_only_member_boards(board, user, authenticated_client):
+    other_user = user
+
+    unowned_member_board = Board.objects.create(name="Member board", owner=other_user)
+    BoardMembership.objects.create(board=unowned_member_board, user=user)
+
+    other_board = Board.objects.create(name="Other board", owner=other_user)
+
+    should_be_displayed = [board, unowned_member_board]
+    excepted_slugs = set([b.slug for b in should_be_displayed])
+
+    url = reverse("board:board-list")
+    response = authenticated_client.get(url)
+    returned_slugs = set(board["slug"] for board in response.data)
+
+    assert response.status_code == 200
+    assert excepted_slugs == returned_slugs
